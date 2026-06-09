@@ -111,6 +111,27 @@ function Test_GetVariant_MissingToggle() as String
     return uAssertEqual(v.feature_enabled, false, "feature disabled for unknown toggle")
 end function
 
+' ---------- Response classification / ETag ----------
+
+function Test_ClassifyResponse() as String
+    r = uAssertEqual(UnleashClassifyResponse(200), "ok", "200 is ok") : if r <> "" then return r
+    r = uAssertEqual(UnleashClassifyResponse(204), "ok", "204 is ok") : if r <> "" then return r
+    r = uAssertEqual(UnleashClassifyResponse(304), "notModified", "304 is notModified") : if r <> "" then return r
+    r = uAssertEqual(UnleashClassifyResponse(404), "error", "404 is error") : if r <> "" then return r
+    r = uAssertEqual(UnleashClassifyResponse(500), "error", "500 is error") : if r <> "" then return r
+    return uAssertEqual(UnleashClassifyResponse(-1), "error", "transport failure is error")
+end function
+
+function Test_ExtractEtag_CaseInsensitive() as String
+    r = uAssertEqual(UnleashExtractEtag({ "ETag": "abc-123" }), "abc-123", "ETag header") : if r <> "" then return r
+    return uAssertEqual(UnleashExtractEtag({ "etag": "W/weak-tag" }), "W/weak-tag", "lower-case etag header")
+end function
+
+function Test_ExtractEtag_Missing() as String
+    r = uAssertInvalid(UnleashExtractEtag({ "content-type": "application/json" }), "no etag present") : if r <> "" then return r
+    return uAssertInvalid(UnleashExtractEtag(invalid), "invalid headers")
+end function
+
 ' ---------- Metrics ----------
 
 function Test_Metrics_Empty() as String

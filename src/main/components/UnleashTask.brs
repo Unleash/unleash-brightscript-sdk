@@ -50,14 +50,27 @@ function unleashPoll() as Void
     unleashLocalQuery = UnleashBuildContextQuery(unleashLocalCfg.appName, unleashLocalU.context, unleashLocalU.util)
     unleashLocalUrl = unleashLocalCfg.url + "?" + unleashLocalQuery
 
-    unleashLocalResp = unleashLocalU.http.get(unleashLocalUrl, unleashHeaders(), 15000)
+    REM Send the stored ETag so the server can answer 304 when nothing changed.
+    unleashLocalHeaders = unleashHeaders()
+    if unleashLocalU.etag <> invalid AND unleashLocalU.etag <> "" then
+        unleashLocalHeaders["If-None-Match"] = unleashLocalU.etag
+    end if
 
-    if unleashLocalResp.ok then
+    unleashLocalResp = unleashLocalU.http.get(unleashLocalUrl, unleashLocalHeaders, 15000)
+    unleashLocalOutcome = UnleashClassifyResponse(unleashLocalResp.code)
+
+    if unleashLocalOutcome = "ok" then
         unleashLocalParsed = UnleashParseToggles(unleashLocalResp.body)
         if unleashLocalParsed.ok then
             unleashLocalU.toggles = unleashLocalParsed.toggles
             m.top.toggles = unleashLocalParsed.toggles
             unleashLocalU.store.putAll(unleashLocalParsed.toggles)
+
+            unleashLocalEtag = UnleashExtractEtag(unleashLocalResp.headers)
+            if unleashLocalEtag <> invalid then
+                unleashLocalU.etag = unleashLocalEtag
+            end if
+
             if m.top.status <> UnleashStatus().ready then
                 m.top.status = UnleashStatus().ready
             end if
@@ -65,6 +78,12 @@ function unleashPoll() as Void
         else
             unleashLocalU.logger.error("unleash: could not parse toggle response")
         end if
+    else if unleashLocalOutcome = "notModified" then
+        REM 304: cached toggles are still current; nothing to publish.
+        if m.top.status <> UnleashStatus().ready then
+            m.top.status = UnleashStatus().ready
+        end if
+        unleashLocalU.logger.debug("unleash: not modified (304)")
     else
         unleashLocalU.logger.error("unleash: fetch failed with code " + unleashLocalResp.code.toStr())
         if m.top.status <> UnleashStatus().ready then
@@ -125,6 +144,7 @@ function mainThread() as Void
         metrics: UnleashMetricsBucket(),
         http: UnleashHTTP(m.messagePort),
         toggles: {},
+        etag: invalid,
         instanceId: "",
         metricsStart: ""
     }

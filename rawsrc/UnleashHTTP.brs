@@ -29,7 +29,7 @@ function UnleashHTTP(unleashParamMessagePort as Object) as Object
 
                     if unleashLocalMsg = invalid then
                         unleashParamTransfer.asyncCancel()
-                        return { ok: false, code: -1, body: "" }
+                        return { ok: false, code: -1, body: "", headers: {} }
                     end if
 
                     if type(unleashLocalMsg) = "roUrlEvent" AND unleashLocalMsg.getSourceIdentity() = unleashLocalId then
@@ -37,17 +37,30 @@ function UnleashHTTP(unleashParamMessagePort as Object) as Object
                         return {
                             ok: (unleashLocalCode >= 200 AND unleashLocalCode < 300),
                             code: unleashLocalCode,
-                            body: unleashLocalMsg.getString()
+                            body: unleashLocalMsg.getString(),
+                            headers: m.normalizeHeaders(unleashLocalMsg.getResponseHeaders())
                         }
                     end if
                 end while
+            end function,
+
+            REM Lower-case response header names so callers can look them up
+            REM deterministically (HTTP header names are case-insensitive).
+            normalizeHeaders: function(unleashParamRaw as Object) as Object
+                unleashLocalHeaders = {}
+                if unleashParamRaw <> invalid then
+                    for each unleashLocalKey in unleashParamRaw
+                        unleashLocalHeaders[lCase(unleashLocalKey)] = unleashParamRaw[unleashLocalKey]
+                    end for
+                end if
+                return unleashLocalHeaders
             end function
         },
 
         get: function(unleashParamUrl as String, unleashParamHeaders as Object, unleashParamTimeoutMs = 10000 as Integer) as Object
             unleashLocalTransfer = m.private.prepare(unleashParamUrl, unleashParamHeaders)
             if NOT unleashLocalTransfer.asyncGetToString() then
-                return { ok: false, code: -1, body: "" }
+                return { ok: false, code: -1, body: "", headers: {} }
             end if
             return m.private.await(unleashLocalTransfer, unleashParamTimeoutMs)
         end function,
@@ -56,7 +69,7 @@ function UnleashHTTP(unleashParamMessagePort as Object) as Object
             unleashLocalTransfer = m.private.prepare(unleashParamUrl, unleashParamHeaders)
             unleashLocalTransfer.setRequest("POST")
             if NOT unleashLocalTransfer.asyncPostFromString(unleashParamBody) then
-                return { ok: false, code: -1, body: "" }
+                return { ok: false, code: -1, body: "", headers: {} }
             end if
             return m.private.await(unleashLocalTransfer, unleashParamTimeoutMs)
         end function

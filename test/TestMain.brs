@@ -20,6 +20,9 @@ sub main()
         { name: "GetVariant_Present", fn: Test_GetVariant_Present }
         { name: "GetVariant_NoVariant", fn: Test_GetVariant_NoVariant }
         { name: "GetVariant_MissingToggle", fn: Test_GetVariant_MissingToggle }
+        { name: "ClassifyResponse", fn: Test_ClassifyResponse }
+        { name: "ExtractEtag_CaseInsensitive", fn: Test_ExtractEtag_CaseInsensitive }
+        { name: "ExtractEtag_Missing", fn: Test_ExtractEtag_Missing }
         { name: "Metrics_Empty", fn: Test_Metrics_Empty }
         { name: "Metrics_Count", fn: Test_Metrics_Count }
         { name: "Metrics_CountVariant", fn: Test_Metrics_CountVariant }

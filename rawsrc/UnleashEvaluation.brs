@@ -27,6 +27,35 @@ function UnleashTogglesFromArray(unleashParamArray as Object) as Object
     return unleashLocalMap
 end function
 
+REM Classify an HTTP response code from /api/frontend into an action:
+REM   "ok"          - a 2xx with a fresh toggle body to apply
+REM   "notModified" - a 304; the cached toggles are still valid, do nothing
+REM   "error"       - anything else (including transport failures, code <= 0)
+function UnleashClassifyResponse(unleashParamCode as Integer) as String
+    if unleashParamCode = 304 then
+        return "notModified"
+    end if
+    if unleashParamCode >= 200 AND unleashParamCode < 300 then
+        return "ok"
+    end if
+    return "error"
+end function
+
+REM Case-insensitively read the ETag from a response header map. Returns
+REM invalid when absent. The stored value is echoed back as If-None-Match on
+REM the next request so the server can answer 304 when nothing changed.
+function UnleashExtractEtag(unleashParamHeaders as Object) as Dynamic
+    if unleashParamHeaders = invalid then
+        return invalid
+    end if
+    for each unleashLocalKey in unleashParamHeaders
+        if lCase(unleashLocalKey) = "etag" then
+            return unleashParamHeaders[unleashLocalKey]
+        end if
+    end for
+    return invalid
+end function
+
 REM Parse a raw /api/frontend JSON body into a toggle map.
 REM Returns { ok: Boolean, toggles: Object }.
 function UnleashParseToggles(unleashParamBody as Dynamic) as Object

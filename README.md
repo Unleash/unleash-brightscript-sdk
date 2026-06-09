@@ -17,6 +17,8 @@ fast startup, and evaluation metrics are reported back to Unleash.
 
 - `isEnabled(name)` and `getVariant(name)` evaluation
 - Background polling (`refreshInterval`) on a Task thread
+- Conditional requests: stores the response `ETag` and sends `If-None-Match`,
+  treating `304 Not Modified` as a no-op
 - Registry-backed bootstrap (last-known toggles available before first fetch)
 - Metrics: per-toggle yes/no + variant counts posted to `/client/metrics`,
   plus a `/client/register` call on startup
