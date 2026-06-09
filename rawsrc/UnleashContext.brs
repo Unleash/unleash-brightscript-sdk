@@ -29,11 +29,10 @@ REM application identity and context for a GET against /api/frontend.
 REM
 REM Pure function: takes a utility object for encoding so it can be tested
 REM off-device. Output ordering is deterministic.
-function UnleashBuildContextQuery(unleashParamAppName as String, unleashParamEnvironment as String, unleashParamContext as Object, unleashParamUtil as Object) as String
+function UnleashBuildContextQuery(unleashParamAppName as String, unleashParamContext as Object, unleashParamUtil as Object) as String
     unleashLocalPairs = []
 
     unleashLocalPairs.push("appName=" + unleashParamUtil.urlEncode(unleashParamAppName))
-    unleashLocalPairs.push("environment=" + unleashParamUtil.urlEncode(unleashParamEnvironment))
 
     unleashLocalStandardFields = ["currentTime", "remoteAddress", "sessionId", "userId"]
     for each unleashLocalField in unleashLocalStandardFields

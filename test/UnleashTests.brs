@@ -52,8 +52,8 @@ end function
 function Test_BuildContextQuery_Deterministic() as String
     u = UnleashUtility()
     ctx = UnleashCreateContext({ userId: "u1", properties: { region: "eu", "b c": "x y" } })
-    query = UnleashBuildContextQuery("my-app", "default", ctx, u)
-    expected = "appName=my-app&environment=default&userId=u1&properties[b%20c]=x%20y&properties[region]=eu"
+    query = UnleashBuildContextQuery("my-app", ctx, u)
+    expected = "appName=my-app&userId=u1&properties[b%20c]=x%20y&properties[region]=eu"
     return uAssertEqual(query, expected, "query string")
 end function
 
@@ -164,7 +164,6 @@ function Test_Config_Defaults() as String
     c = UnleashConfig("my-token")
     r = uAssertEqual(c.private.clientKey, "my-token", "clientKey") : if r <> "" then return r
     r = uAssertEqual(c.private.appName, "unleash-brightscript", "default appName") : if r <> "" then return r
-    r = uAssertEqual(c.private.environment, "default", "default environment") : if r <> "" then return r
     r = uAssertEqual(c.private.refreshIntervalSeconds, 30, "default refresh") : if r <> "" then return r
     return uAssertEqual(c.private.headerName, "Authorization", "default header name")
 end function

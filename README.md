@@ -96,7 +96,6 @@ immediate refresh.
 | --- | --- | --- |
 | `setUrl(url)` | Frontend API base URL (returns `false` if not http/https) | `http://localhost:4242/api/frontend` |
 | `setAppName(name)` | Application name (also sent as context + header) | `unleash-brightscript` |
-| `setEnvironment(env)` | Context environment | `default` |
 | `setRefreshIntervalSeconds(n)` | Poll interval; `0` disables polling | `30` |
 | `setMetricsIntervalSeconds(n)` | Metrics flush interval | `30` |
 | `setDisableMetrics(bool)` | Disable metrics + register calls | `false` |

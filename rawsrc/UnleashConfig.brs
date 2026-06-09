@@ -11,7 +11,6 @@ function UnleashConfig(unleashParamClientKey as String, unleashParamSceneGraphNo
             clientKey: unleashParamClientKey,
             url: "http://localhost:4242/api/frontend",
             appName: "unleash-brightscript",
-            environment: "default",
             headerName: "Authorization",
             customHeaders: {},
 
@@ -40,10 +39,6 @@ function UnleashConfig(unleashParamClientKey as String, unleashParamSceneGraphNo
 
         setAppName: function(unleashParamAppName as String) as Void
             m.private.appName = unleashParamAppName
-        end function,
-
-        setEnvironment: function(unleashParamEnvironment as String) as Void
-            m.private.environment = unleashParamEnvironment
         end function,
 
         REM Polling interval in seconds. 0 disables automatic refresh.

@@ -47,7 +47,7 @@ function unleashPoll() as Void
         return
     end if
 
-    unleashLocalQuery = UnleashBuildContextQuery(unleashLocalCfg.appName, unleashLocalCfg.environment, unleashLocalU.context, unleashLocalU.util)
+    unleashLocalQuery = UnleashBuildContextQuery(unleashLocalCfg.appName, unleashLocalU.context, unleashLocalU.util)
     unleashLocalUrl = unleashLocalCfg.url + "?" + unleashLocalQuery
 
     unleashLocalResp = unleashLocalU.http.get(unleashLocalUrl, unleashHeaders(), 15000)
