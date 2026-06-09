@@ -1,0 +1,6 @@
+node_modules/
+build/
+src/main/source/Unleash.brs
+*.zip
+.DS_Store
+out/

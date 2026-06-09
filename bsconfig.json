@@ -1,0 +1,11 @@
+{
+    "rootDir": "src/main",
+    "files": [
+        "manifest",
+        "source/**/*.brs",
+        "components/**/*.brs",
+        "components/**/*.xml"
+    ],
+    "createPackage": false,
+    "lintConfig": {}
+}

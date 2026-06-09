@@ -1,0 +1,71 @@
+#!/usr/bin/env node
+"use strict";
+
+/**
+ * Off-device test runner.
+ *
+ * The Roku does not need to be involved to test the SDK's pure logic. This
+ * script bundles the built library (src/main/source/Unleash.brs) together with
+ * the BrightScript test files and executes them with the `brs` interpreter,
+ * then inspects the output to set the process exit code.
+ *
+ * Only the device-free code paths are exercised here (encoding, parsing,
+ * evaluation, metrics bucketing, config). Networking and SceneGraph threading
+ * are verified on-device / via the demo channel.
+ */
+
+const fs = require("fs");
+const path = require("path");
+const { execFileSync } = require("child_process");
+
+const root = path.resolve(__dirname, "..");
+const lib = path.join(root, "src/main/source/Unleash.brs");
+const testDir = path.join(root, "test");
+const buildDir = path.join(root, "build");
+const bundle = path.join(buildDir, "test-bundle.brs");
+
+if (!fs.existsSync(lib)) {
+    console.error(`missing built library at ${lib} — run \`make build\` first`);
+    process.exit(2);
+}
+
+// Order matters only so that `main` (the runner) is present; definitions are
+// resolved at runtime. Assert + test files are loaded before TestMain.
+const testFiles = fs
+    .readdirSync(testDir)
+    .filter((f) => f.endsWith(".brs") && f !== "TestMain.brs")
+    .sort()
+    .map((f) => path.join(testDir, f));
+testFiles.push(path.join(testDir, "TestMain.brs"));
+
+const parts = [fs.readFileSync(lib, "utf8")];
+for (const f of testFiles) {
+    parts.push(`\n' ===== ${path.basename(f)} =====\n`);
+    parts.push(fs.readFileSync(f, "utf8"));
+}
+
+fs.mkdirSync(buildDir, { recursive: true });
+fs.writeFileSync(bundle, parts.join("\n"), "utf8");
+
+// Run brs with --root pointing at build/ (which has no `components` dir) so the
+// interpreter does not try to parse the channel's SceneGraph XML.
+const brsBin = path.join(root, "node_modules/.bin/brs");
+
+let output = "";
+let failed = false;
+try {
+    output = execFileSync(brsBin, ["--root", buildDir, bundle], {
+        encoding: "utf8",
+        stdio: ["ignore", "pipe", "pipe"],
+    });
+} catch (err) {
+    output = `${err.stdout || ""}${err.stderr || ""}`;
+    failed = true;
+}
+
+process.stdout.write(output);
+
+if (failed || /not ok/.test(output) || /TEST FAILURE/.test(output) || !/ALL TESTS PASSED/.test(output)) {
+    process.exit(1);
+}
+process.exit(0);

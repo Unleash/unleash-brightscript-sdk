@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8" ?>
+
+<component name="UnleashTask" extends="Task">
+    <interface>
+        <!-- inputs (set by the render thread) -->
+        <field id="config" type="assocarray"/>
+        <field id="context" type="assocarray" alwaysNotify="true"/>
+        <field id="count" type="assocarray" alwaysNotify="true"/>
+        <field id="flush" type="bool" alwaysNotify="true"/>
+
+        <!-- outputs (observed by the application) -->
+        <field id="toggles" type="assocarray"/>
+        <field id="status" type="integer" value="0"/>
+    </interface>
+
+    <script type="text/brightscript" uri="pkg:/components/UnleashTask.brs"/>
+    <script type="text/brightscript" uri="pkg:/source/Unleash.brs"/>
+</component>
