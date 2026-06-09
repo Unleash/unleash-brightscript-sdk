@@ -69,6 +69,16 @@ logs: ## Tail the Roku debug console (BrightScript print output)
 	@echo "connecting to $(ROKU_IP):8085 (Ctrl-C to quit) ..."
 	@telnet $(ROKU_IP) 8085
 
+# Path to the brs-desktop binary (https://github.com/lvcabral/brs-desktop).
+# Override per platform, e.g.:
+#   macOS:   make sim BRS_DESKTOP="/Applications/BrightScript Simulator.app/Contents/MacOS/BrightScript Simulator"
+#   Linux:   make sim BRS_DESKTOP="$$HOME/Applications/BrightScript Simulator.AppImage"
+BRS_DESKTOP ?= BrightScript Simulator
+
+.PHONY: sim
+sim: package ## Run the demo in the brs-desktop simulator (-r telnet, -c console)
+	@"$(BRS_DESKTOP)" -o build/package.zip -r -c
+
 .PHONY: clean
 clean: ## Remove generated artifacts
 	@rm -rf build $(OUT)

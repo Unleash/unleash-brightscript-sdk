@@ -137,8 +137,10 @@ make lint         # brighterscript type-check of the library + components
 `npm test` bundles `src/main/source/Unleash.brs` with the files in `test/` and
 runs them through `brs`, then fails the process if any assertion fails.
 
-Networking and SceneGraph threading are verified on-device using the demo
-channel under `src/main/` (`make package` builds a sideloadable `build/package.zip`).
+Networking and SceneGraph threading are verified by running the demo channel
+under `src/main/` — either on the [`brs-desktop`](https://github.com/lvcabral/brs-desktop)
+desktop simulator or on a physical Roku. `make package` builds a sideloadable
+`build/package.zip`; see [`docs/RUNNING_THE_EXAMPLE.md`](./docs/RUNNING_THE_EXAMPLE.md).
 
 ## Project layout
 
