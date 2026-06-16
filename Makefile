@@ -30,12 +30,16 @@ build: ## Concatenate rawsrc modules into the single library file
 	done
 	@echo "built $(OUT)"
 
+.PHONY: baseline
+baseline: ## Capture the JS-SDK parity baseline (test/fixtures/expected.json)
+	@node scripts/capture-baseline.js
+
 .PHONY: test
-test: build ## Run the off-device unit tests (Node + brs interpreter)
+test: build ## Run the off-device unit + parity tests (Node + brs interpreter)
 	@node scripts/run-tests.js
 
 .PHONY: lint
-lint: ## Type-check / lint with brighterscript
+lint: build ## Type-check / lint with brighterscript
 	@./node_modules/.bin/bsc --project bsconfig.json
 
 .PHONY: package

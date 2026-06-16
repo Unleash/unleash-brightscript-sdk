@@ -227,3 +227,90 @@ function Test_Config_CustomHeaderName() as String
     r = uAssertEqual(h["X-API-Key"], "tok", "custom auth header name") : if r <> "" then return r
     return uAssertInvalid(h.Authorization, "default Authorization header absent")
 end function
+
+' ---------- Behavioral parity with unleash-js-sdk ----------
+'
+' These assert that the BrightScript SDK returns the SAME isEnabled / getVariant
+' answers as the official Unleash JavaScript frontend SDK for an identical
+' /api/frontend response. The baseline (test/fixtures/expected.json) is captured
+' from `unleash-proxy-client` by scripts/capture-baseline.js and embedded into
+' the test bundle by scripts/run-tests.js (ParityResponseBody / ParityExpected).
+
+REM Index the JS-SDK baseline rows by toggle name so lookups are
+REM order-independent (the baseline and the response can be in any order).
+function ParityBaselineByName() as Object
+    byName = {}
+    expected = parseJSON(ParityExpected())
+    if expected <> invalid then
+        for each e in expected
+            byName[e.name] = e
+        end for
+    end if
+    return byName
+end function
+
+REM The baseline must cover exactly the queried toggles. A mismatch means the
+REM committed expected.json is stale relative to queries.json (re-run `make baseline`).
+function Test_Parity_Coverage() as String
+    queries = parseJSON(ParityQueries())
+    byName = ParityBaselineByName()
+    if queries = invalid OR queries.count() = 0 then
+        return "no parity queries embedded; check test/fixtures/queries.json"
+    end if
+    if byName.count() = 0 then
+        return "no JS-SDK baseline embedded; run `make baseline` to capture expected.json"
+    end if
+    if byName.count() <> queries.count() then
+        return "baseline covers " + byName.count().toStr() + " toggles but queries.json has " + queries.count().toStr() + " (run `make baseline`)"
+    end if
+    for each name in queries
+        if byName[name] = invalid then
+            return "no baseline entry for queried toggle " + name + " (run `make baseline`)"
+        end if
+    end for
+    return ""
+end function
+
+function Test_Parity_Evaluation() as String
+    parsed = UnleashParseToggles(ParityResponseBody())
+    if parsed.ok <> true then
+        return "fixture response failed to parse"
+    end if
+
+    queries = parseJSON(ParityQueries())
+    byName = ParityBaselineByName()
+    if queries = invalid OR queries.count() = 0 OR byName.count() = 0 then
+        return "no parity fixtures to compare against (run `make baseline`)"
+    end if
+
+    for each name in queries
+        e = byName[name]
+        if e = invalid then
+            return "no baseline entry for queried toggle " + name + " (run `make baseline`)"
+        end if
+
+        ie = UnleashIsEnabled(parsed.toggles, name)
+        r = uAssertEqual(ie, (e.isEnabled = true), "isEnabled parity for " + name)
+        if r <> "" then return r
+
+        v = UnleashGetVariant(parsed.toggles, name)
+        r = uAssertEqual(v.name, e.variant.name, "variant name parity for " + name)
+        if r <> "" then return r
+        r = uAssertEqual((v.enabled = true), (e.variant.enabled = true), "variant enabled parity for " + name)
+        if r <> "" then return r
+        r = uAssertEqual((v.feature_enabled = true), (e.variant.feature_enabled = true), "variant feature_enabled parity for " + name)
+        if r <> "" then return r
+
+        if e.variant.payload <> invalid then
+            if v.payload = invalid then
+                return "expected payload for " + name + " but BrightScript returned none"
+            end if
+            r = uAssertEqual(v.payload.type, e.variant.payload.type, "payload type parity for " + name)
+            if r <> "" then return r
+            r = uAssertEqual(v.payload.value, e.variant.payload.value, "payload value parity for " + name)
+            if r <> "" then return r
+        end if
+    end for
+
+    return ""
+end function

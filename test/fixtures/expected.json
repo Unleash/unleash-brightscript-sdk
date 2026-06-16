@@ -1,0 +1,55 @@
+[
+  {
+    "name": "demo.enabledNoVariant",
+    "isEnabled": true,
+    "variant": {
+      "name": "disabled",
+      "enabled": false,
+      "feature_enabled": true
+    }
+  },
+  {
+    "name": "demo.disabled",
+    "isEnabled": false,
+    "variant": {
+      "name": "disabled",
+      "enabled": false,
+      "feature_enabled": false
+    }
+  },
+  {
+    "name": "demo.colorVariant",
+    "isEnabled": true,
+    "variant": {
+      "name": "blue",
+      "enabled": true,
+      "feature_enabled": true,
+      "payload": {
+        "type": "string",
+        "value": "#0000ff"
+      }
+    }
+  },
+  {
+    "name": "demo.jsonVariant",
+    "isEnabled": true,
+    "variant": {
+      "name": "config",
+      "enabled": true,
+      "feature_enabled": true,
+      "payload": {
+        "type": "json",
+        "value": "{\"limit\":10}"
+      }
+    }
+  },
+  {
+    "name": "demo.unknownToggle",
+    "isEnabled": false,
+    "variant": {
+      "name": "disabled",
+      "enabled": false,
+      "feature_enabled": false
+    }
+  }
+]

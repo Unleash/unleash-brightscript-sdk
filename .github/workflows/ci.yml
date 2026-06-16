@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint (brighterscript type-check)
+        run: make lint
+
+      # The JS-SDK parity baseline (test/fixtures/expected.json) is captured
+      # against a pinned unleash-proxy-client version and committed, so tests run
+      # against a known artifact — no per-build regeneration. Maintainers re-run
+      # `make baseline` when changing the fixtures or bumping that dependency.
+      - name: Run unit + parity tests
+        run: make test
