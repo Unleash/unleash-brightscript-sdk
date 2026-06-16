@@ -39,7 +39,7 @@ test: build ## Run the off-device unit + parity tests (Node + brs interpreter)
 	@node scripts/run-tests.js
 
 .PHONY: lint
-lint: ## Type-check / lint with brighterscript
+lint: build ## Type-check / lint with brighterscript
 	@./node_modules/.bin/bsc --project bsconfig.json
 
 .PHONY: package
