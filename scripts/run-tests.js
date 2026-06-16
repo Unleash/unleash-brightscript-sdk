@@ -25,12 +25,18 @@ const fixturesDir = path.join(testDir, "fixtures");
 const buildDir = path.join(root, "build");
 const bundle = path.join(buildDir, "test-bundle.brs");
 
-// Embed the parity fixtures (shared Frontend API response) and the JS-SDK
-// baseline (test/fixtures/expected.json, produced by scripts/capture-baseline.js)
-// as BrightScript string constants so the parity tests can compare without any
-// on-device file I/O. JSON is compacted and `"` is doubled per BrightScript
-// string-literal escaping. Missing files degrade to empty values so the rest of
-// the suite still runs (the parity test treats an empty baseline as a skip).
+// Embed the parity fixtures as BrightScript string constants so the parity tests
+// can compare without any on-device file I/O. Three fixtures are embedded:
+//   - frontend-response.json : the shared /api/frontend response (toggle data)
+//   - queries.json           : the toggle names to evaluate (the test contract)
+//   - expected.json          : the committed JS-SDK baseline (the known truth,
+//                              produced by scripts/capture-baseline.js)
+// The parity test keys the baseline by toggle name and looks each query up, so
+// the order of toggles in the response or rows in the baseline is irrelevant —
+// no sorting is needed and reordering can't produce a false negative. JSON is
+// compacted and `"` is doubled per BrightScript string-literal escaping. Missing
+// files degrade to empty values so the rest of the suite still runs (the parity
+// test fails loudly on an empty baseline rather than silently skipping).
 function readJsonCompact(file) {
     if (!fs.existsSync(file)) {
         return null;
@@ -44,10 +50,14 @@ function brsStringLiteral(value) {
 
 function parityDataModule() {
     const body = readJsonCompact(path.join(fixturesDir, "frontend-response.json")) || "{}";
+    const queries = readJsonCompact(path.join(fixturesDir, "queries.json")) || "[]";
     const expected = readJsonCompact(path.join(fixturesDir, "expected.json")) || "[]";
     return [
         "function ParityResponseBody() as String",
         "    return " + brsStringLiteral(body),
+        "end function",
+        "function ParityQueries() as String",
+        "    return " + brsStringLiteral(queries),
         "end function",
         "function ParityExpected() as String",
         "    return " + brsStringLiteral(expected),

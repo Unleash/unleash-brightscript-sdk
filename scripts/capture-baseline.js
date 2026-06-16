@@ -27,16 +27,9 @@ const responsePath = path.join(fixturesDir, "frontend-response.json");
 const queriesPath = path.join(fixturesDir, "queries.json");
 const expectedPath = path.join(fixturesDir, "expected.json");
 
-let UnleashClient, InMemoryStorageProvider;
-try {
-    ({ UnleashClient, InMemoryStorageProvider } = require("unleash-proxy-client"));
-} catch (err) {
-    console.error(
-        "missing dependency `unleash-proxy-client` — run `pnpm install` first.\n" +
-            "It is the official Unleash JS frontend SDK and the parity baseline source of truth."
-    );
-    process.exit(2);
-}
+// The official Unleash JS frontend SDK is the parity baseline's source of truth.
+// If it's missing, the require throws with a clear module-not-found error.
+const { UnleashClient, InMemoryStorageProvider } = require("unleash-proxy-client");
 
 const response = JSON.parse(fs.readFileSync(responsePath, "utf8"));
 const queries = JSON.parse(fs.readFileSync(queriesPath, "utf8"));

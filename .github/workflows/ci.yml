@@ -29,14 +29,9 @@ jobs:
       - name: Lint (brighterscript type-check)
         run: make lint
 
-      # Regenerate the JS-SDK parity baseline and fail if it drifts from the
-      # committed expected.json. This keeps the BrightScript SDK honest against
-      # the official frontend SDK's evaluation behavior.
-      - name: Refresh parity baseline
-        run: make baseline
-
-      - name: Verify baseline is up to date
-        run: git diff --exit-code test/fixtures/expected.json
-
+      # The JS-SDK parity baseline (test/fixtures/expected.json) is captured
+      # against a pinned unleash-proxy-client version and committed, so tests run
+      # against a known artifact — no per-build regeneration. Maintainers re-run
+      # `make baseline` when changing the fixtures or bumping that dependency.
       - name: Run unit + parity tests
         run: make test

@@ -34,7 +34,7 @@ sub main()
         { name: "Config_DisableRefresh", fn: Test_Config_DisableRefresh }
         { name: "Config_BuildHeaders", fn: Test_Config_BuildHeaders }
         { name: "Config_CustomHeaderName", fn: Test_Config_CustomHeaderName }
-        { name: "Parity_BaselinePresent", fn: Test_Parity_BaselinePresent }
+        { name: "Parity_Coverage", fn: Test_Parity_Coverage }
         { name: "Parity_Evaluation", fn: Test_Parity_Evaluation }
     ]
 
