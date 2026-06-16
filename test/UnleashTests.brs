@@ -227,3 +227,57 @@ function Test_Config_CustomHeaderName() as String
     r = uAssertEqual(h["X-API-Key"], "tok", "custom auth header name") : if r <> "" then return r
     return uAssertInvalid(h.Authorization, "default Authorization header absent")
 end function
+
+' ---------- Behavioral parity with unleash-js-sdk ----------
+'
+' These assert that the BrightScript SDK returns the SAME isEnabled / getVariant
+' answers as the official Unleash JavaScript frontend SDK for an identical
+' /api/frontend response. The baseline (test/fixtures/expected.json) is captured
+' from `unleash-proxy-client` by scripts/capture-baseline.js and embedded into
+' the test bundle by scripts/run-tests.js (ParityResponseBody / ParityExpected).
+
+function Test_Parity_BaselinePresent() as String
+    expected = parseJSON(ParityExpected())
+    if expected = invalid OR expected.count() = 0 then
+        return "no JS-SDK baseline embedded; run `make baseline` to capture expected.json"
+    end if
+    return ""
+end function
+
+function Test_Parity_Evaluation() as String
+    parsed = UnleashParseToggles(ParityResponseBody())
+    if parsed.ok <> true then
+        return "fixture response failed to parse"
+    end if
+
+    expected = parseJSON(ParityExpected())
+    if expected = invalid OR expected.count() = 0 then
+        return "no JS-SDK baseline to compare against (run `make baseline`)"
+    end if
+
+    for each e in expected
+        ie = UnleashIsEnabled(parsed.toggles, e.name)
+        r = uAssertEqual(ie, (e.isEnabled = true), "isEnabled parity for " + e.name)
+        if r <> "" then return r
+
+        v = UnleashGetVariant(parsed.toggles, e.name)
+        r = uAssertEqual(v.name, e.variant.name, "variant name parity for " + e.name)
+        if r <> "" then return r
+        r = uAssertEqual((v.enabled = true), (e.variant.enabled = true), "variant enabled parity for " + e.name)
+        if r <> "" then return r
+        r = uAssertEqual((v.feature_enabled = true), (e.variant.feature_enabled = true), "variant feature_enabled parity for " + e.name)
+        if r <> "" then return r
+
+        if e.variant.payload <> invalid then
+            if v.payload = invalid then
+                return "expected payload for " + e.name + " but BrightScript returned none"
+            end if
+            r = uAssertEqual(v.payload.type, e.variant.payload.type, "payload type parity for " + e.name)
+            if r <> "" then return r
+            r = uAssertEqual(v.payload.value, e.variant.payload.value, "payload value parity for " + e.name)
+            if r <> "" then return r
+        end if
+    end for
+
+    return ""
+end function

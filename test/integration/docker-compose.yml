@@ -1,0 +1,38 @@
+# Known-state Unleash instance for the BrightScript SDK integration smoke test.
+#
+# It pins well-known insecure tokens so the seed script and the Roku demo need
+# no manual token bootstrapping:
+#   - Admin (for scripts/seed-unleash.js):  *:*.unleash-insecure-admin-api-token
+#   - Frontend (for the Roku demo client):  default:development.unleash-insecure-frontend-api-token
+#
+# Bring up:  docker compose -f test/integration/docker-compose.yml up -d
+# Seed:      node scripts/seed-unleash.js
+# Frontend API base URL for the demo:  http://<host>:4242/api/frontend
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: unleash
+      POSTGRES_USER: unleash
+      POSTGRES_PASSWORD: unleash
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "unleash"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
+  unleash:
+    image: unleashorg/unleash-server:latest
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      # Override the host port if 4242 is taken: UNLEASH_PORT=4243 docker compose ...
+      - "${UNLEASH_PORT:-4242}:4242"
+    environment:
+      DATABASE_URL: postgres://unleash:unleash@db:5432/unleash
+      DATABASE_SSL: "false"
+      INIT_ADMIN_API_TOKENS: "*:*.unleash-insecure-admin-api-token"
+      INIT_FRONTEND_API_TOKENS: "default:development.unleash-insecure-frontend-api-token"
+      # CORS so a real browser/device can call the Frontend API directly.
+      CORS_ALLOWED_ORIGIN: "*"

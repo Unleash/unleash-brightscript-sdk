@@ -21,8 +21,39 @@ const { execFileSync } = require("child_process");
 const root = path.resolve(__dirname, "..");
 const lib = path.join(root, "src/main/source/Unleash.brs");
 const testDir = path.join(root, "test");
+const fixturesDir = path.join(testDir, "fixtures");
 const buildDir = path.join(root, "build");
 const bundle = path.join(buildDir, "test-bundle.brs");
+
+// Embed the parity fixtures (shared Frontend API response) and the JS-SDK
+// baseline (test/fixtures/expected.json, produced by scripts/capture-baseline.js)
+// as BrightScript string constants so the parity tests can compare without any
+// on-device file I/O. JSON is compacted and `"` is doubled per BrightScript
+// string-literal escaping. Missing files degrade to empty values so the rest of
+// the suite still runs (the parity test treats an empty baseline as a skip).
+function readJsonCompact(file) {
+    if (!fs.existsSync(file)) {
+        return null;
+    }
+    return JSON.stringify(JSON.parse(fs.readFileSync(file, "utf8")));
+}
+
+function brsStringLiteral(value) {
+    return '"' + String(value).replace(/"/g, '""') + '"';
+}
+
+function parityDataModule() {
+    const body = readJsonCompact(path.join(fixturesDir, "frontend-response.json")) || "{}";
+    const expected = readJsonCompact(path.join(fixturesDir, "expected.json")) || "[]";
+    return [
+        "function ParityResponseBody() as String",
+        "    return " + brsStringLiteral(body),
+        "end function",
+        "function ParityExpected() as String",
+        "    return " + brsStringLiteral(expected),
+        "end function",
+    ].join("\n");
+}
 
 if (!fs.existsSync(lib)) {
     console.error(`missing built library at ${lib} — run \`make build\` first`);
@@ -39,6 +70,8 @@ const testFiles = fs
 testFiles.push(path.join(testDir, "TestMain.brs"));
 
 const parts = [fs.readFileSync(lib, "utf8")];
+parts.push("\n' ===== parity fixtures (generated) =====\n");
+parts.push(parityDataModule());
 for (const f of testFiles) {
     parts.push(`\n' ===== ${path.basename(f)} =====\n`);
     parts.push(fs.readFileSync(f, "utf8"));

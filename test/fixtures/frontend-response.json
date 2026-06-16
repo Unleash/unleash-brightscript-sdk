@@ -1,0 +1,38 @@
+{
+  "toggles": [
+    {
+      "name": "demo.enabledNoVariant",
+      "enabled": true,
+      "variant": { "name": "disabled", "enabled": false, "feature_enabled": true },
+      "impressionData": false
+    },
+    {
+      "name": "demo.disabled",
+      "enabled": false,
+      "variant": { "name": "disabled", "enabled": false, "feature_enabled": false },
+      "impressionData": false
+    },
+    {
+      "name": "demo.colorVariant",
+      "enabled": true,
+      "variant": {
+        "name": "blue",
+        "enabled": true,
+        "feature_enabled": true,
+        "payload": { "type": "string", "value": "#0000ff" }
+      },
+      "impressionData": false
+    },
+    {
+      "name": "demo.jsonVariant",
+      "enabled": true,
+      "variant": {
+        "name": "config",
+        "enabled": true,
+        "feature_enabled": true,
+        "payload": { "type": "json", "value": "{\"limit\":10}" }
+      },
+      "impressionData": false
+    }
+  ]
+}

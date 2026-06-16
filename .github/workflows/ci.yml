@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint (brighterscript type-check)
+        run: make lint
+
+      # Regenerate the JS-SDK parity baseline and fail if it drifts from the
+      # committed expected.json. This keeps the BrightScript SDK honest against
+      # the official frontend SDK's evaluation behavior.
+      - name: Refresh parity baseline
+        run: make baseline
+
+      - name: Verify baseline is up to date
+        run: git diff --exit-code test/fixtures/expected.json
+
+      - name: Run unit + parity tests
+        run: make test

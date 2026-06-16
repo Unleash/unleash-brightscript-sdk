@@ -13,6 +13,24 @@ fast startup, and evaluation metrics are reported back to Unleash.
 > [LaunchDarkly Roku SDK](https://github.com/launchdarkly/roku-client-sdk).
 > See [`NOTICE`](./NOTICE).
 
+## Status: Alpha
+
+This SDK is **alpha**. The core frontend use cases — initialization,
+`isEnabled`, and `getVariant` (including variants with payloads) — are validated
+and confirmed to behave the same as the official Unleash JavaScript frontend SDK.
+
+It is suitable for evaluation and early adoption, **not** for production-critical
+use yet. Known limitations for alpha users:
+
+- **No retry/backoff**: a failed poll sets `error` status and simply waits for
+  the next interval; there's no exponential backoff.
+- **HTTP timeout is hardcoded** to 15s (not yet configurable).
+- Not yet implemented: impression events, impact metrics, custom storage
+  providers, POST-context requests.
+- Validated against the **Unleash Frontend API**; **Unleash Edge** is expected to
+  work but is not yet validated.
+- Device coverage is limited (simulator + a small set of physical Roku models).
+
 ## Features
 
 - `isEnabled(name)` and `getVariant(name)` evaluation
@@ -127,21 +145,28 @@ Recognised keys: `userId`, `sessionId`, `remoteAddress`, `currentTime`, and a
 Pure logic (encoding, context query building, response parsing, evaluation,
 metrics bucketing, config) is unit tested **off-device** with the
 [`brs`](https://github.com/rokucommunity/brs) interpreter — no Roku hardware
-required.
+required. A **behavioral-parity** suite additionally asserts that `isEnabled` /
+`getVariant` return the same answers as the official Unleash JS frontend SDK for
+identical `/api/frontend` responses.
 
 ```sh
-npm install
-npm test          # make build + run the brs-based suite
+pnpm install
+make test         # build + unit + parity suite (brs interpreter)
 make lint         # brighterscript type-check of the library + components
+make baseline     # re-capture the JS-SDK parity baseline (test/fixtures/expected.json)
 ```
 
-`npm test` bundles `src/main/source/Unleash.brs` with the files in `test/` and
-runs them through `brs`, then fails the process if any assertion fails.
+`make test` bundles `src/main/source/Unleash.brs` with the files in `test/`
+(plus the embedded parity fixtures) and runs them through `brs`, failing if any
+assertion fails. The parity baseline is captured from `unleash-proxy-client` by
+`scripts/capture-baseline.js`; CI fails if the committed baseline drifts.
 
 Networking and SceneGraph threading are verified by running the demo channel
-under `src/main/` — either on the [`brs-desktop`](https://github.com/lvcabral/brs-desktop)
-desktop simulator or on a physical Roku. `make package` builds a sideloadable
-`build/package.zip`; see [`docs/RUNNING_THE_EXAMPLE.md`](./docs/RUNNING_THE_EXAMPLE.md).
+under `src/main/` against a real Unleash instance — see the repeatable
+[integration smoke test](./docs/INTEGRATION_TESTING.md) (with a
+`docker compose` + seed setup) and
+[`docs/RUNNING_THE_EXAMPLE.md`](./docs/RUNNING_THE_EXAMPLE.md). `make package`
+builds a sideloadable `build/package.zip`.
 
 ## Project layout
 
@@ -150,9 +175,14 @@ rawsrc/                     source modules (concatenated into one file)
 src/main/source/Unleash.brs generated library (git-ignored)
 src/main/components/        UnleashTask (SDK) + AppScene (demo)
 src/main/source/main.brs    demo channel entry point
-test/                       off-device brs unit tests
+test/                       off-device brs unit + parity tests
+test/fixtures/              shared Frontend API response + JS-SDK baseline
+test/integration/           docker-compose for the live smoke test
 scripts/run-tests.js        test runner
-Makefile                    build / test / lint / package
+scripts/capture-baseline.js JS-SDK parity baseline capture
+scripts/seed-unleash.js     seed a local Unleash with the fixture toggles
+.github/workflows/ci.yml    build + lint + unit/parity on push/PR
+Makefile                    build / test / lint / baseline / package
 ```
 
 ## License
