@@ -1,0 +1,162 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version to release (without "v" prefix)
+        required: true
+        default: 0.1.0-alpha.1
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ inputs.version }}
+      TAG: v${{ inputs.version }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Validate release input
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [ -z "$VERSION" ] || [[ "$VERSION" == v* ]]; then
+            echo "Version must be provided without a leading v; got $VERSION" >&2
+            exit 1
+          fi
+
+          if [ "$GITHUB_REF_TYPE" != "branch" ]; then
+            echo "Release workflow must run from a branch; got $GITHUB_REF_TYPE $GITHUB_REF_NAME" >&2
+            exit 1
+          fi
+
+          git fetch --tags origin
+
+          if git rev-parse "$TAG^{commit}" >/dev/null 2>&1; then
+            echo "Tag $TAG already exists" >&2
+            exit 1
+          fi
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Set release version
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          node -e "
+            const fs = require('fs');
+            const version = process.env.VERSION;
+            const path = 'rawsrc/UnleashVersion.brs';
+            const source = fs.readFileSync(path, 'utf8');
+            const next = source.replace(
+              /return \"[^\"]+\"/,
+              'return \"' + version + '\"'
+            );
+            if (next === source) {
+              throw new Error('Could not update UnleashSdkVersion');
+            }
+            fs.writeFileSync(path, next);
+          "
+
+          npm version "$VERSION" --no-git-tag-version
+          make build
+          git add package.json package-lock.json rawsrc/UnleashVersion.brs
+          git commit -m "chore: bump version to $VERSION"
+          git tag -a "$TAG" -m "$TAG"
+
+      - name: Lint
+        run: make lint
+
+      - name: Test
+        run: make test
+
+      - name: Build SDK release archive
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          dist_dir="build/release"
+          package_dir="$dist_dir/unleash-brightscript-sdk-$VERSION"
+          archive="unleash-brightscript-sdk-$VERSION.tgz"
+
+          rm -rf "$dist_dir"
+          mkdir -p "$package_dir/source" "$package_dir/components"
+
+          cp src/main/source/Unleash.brs "$package_dir/source/"
+          cp src/main/components/UnleashTask.brs "$package_dir/components/"
+          cp src/main/components/UnleashTask.xml "$package_dir/components/"
+          cp README.md LICENSE NOTICE "$package_dir/"
+
+          tar -C "$dist_dir" -czf "$dist_dir/$archive" "unleash-brightscript-sdk-$VERSION"
+          (cd "$dist_dir" && sha256sum "$archive" > SHA256SUMS)
+
+          cat > "$dist_dir/RELEASE_NOTES.md" <<EOF
+          Release of the Unleash BrightScript SDK for Roku.
+
+          It includes the generated SDK source file and SceneGraph Task component
+          needed for copy-into-channel integration:
+
+          - source/Unleash.brs
+          - components/UnleashTask.brs
+          - components/UnleashTask.xml
+
+          See README.md in the archive for installation and API usage.
+          EOF
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: unleash-brightscript-sdk-${{ env.VERSION }}
+          path: |
+            build/release/unleash-brightscript-sdk-${{ env.VERSION }}.tgz
+            build/release/SHA256SUMS
+          if-no-files-found: error
+
+      - name: Create and push release tag
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          git push origin "HEAD:${GITHUB_REF_NAME}"
+          git push origin "refs/tags/$TAG"
+
+      - name: Create GitHub release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          args=(
+            "$TAG"
+            "build/release/unleash-brightscript-sdk-$VERSION.tgz"
+            "build/release/SHA256SUMS"
+            --title "$TAG"
+            --notes-file build/release/RELEASE_NOTES.md
+          )
+
+          if [[ "$VERSION" == *-* ]]; then
+            args+=(--prerelease --latest=false)
+          fi
+
+          gh release create "${args[@]}" \
+            --verify-tag
