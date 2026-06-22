@@ -2,16 +2,3 @@ Unleash BrightScript SDK
 Copyright 2026 Bricks Software AB (Unleash)
 
 This product is licensed under the Apache License, Version 2.0 (see LICENSE).
-
-------------------------------------------------------------------------------
-
-This product contains code derived from the LaunchDarkly SDK for Roku
-(https://github.com/launchdarkly/roku-client-sdk), which is licensed under the
-Apache License, Version 2.0:
-
-    Copyright 2018 Catamorphic, Co.
-
-In particular, the background-thread architecture (Task node + observed fields
-+ message port), the level-filtering logger, and the off-device test approach
-are adapted from that project. The Unleash-specific protocol, evaluation,
-context, metrics, and configuration code is original to this project.
