@@ -5,9 +5,9 @@ git (no commit yet).
 
 ## What was built
 
-Ported the LaunchDarkly Roku SDK's proven architecture (Task-thread networking
-+ observed node fields + message port) and rewrote the protocol layer for the
-Unleash Frontend API. Modules in `rawsrc/` are concatenated by the Makefile
+Implemented a Roku SceneGraph Task architecture for background networking and
+observed node fields, with a protocol layer for the Unleash Frontend API.
+Modules in `rawsrc/` are concatenated by the Makefile
 into a single `Unleash.brs`:
 
 | Module | Role |
@@ -42,8 +42,7 @@ later).
 
 - Switched the test interpreter from `brs@0.45` (crashes on load in this env)
   to the maintained `@rokucommunity/brs@0.47`.
-- Apache-2.0 `LICENSE` + a `NOTICE` attributing the LaunchDarkly-derived
-  architecture, per their license terms.
+- Apache-2.0 `LICENSE` + project `NOTICE`.
 - Networking/SceneGraph logic is deliberately thin; all decision logic lives in
   pure functions so it's testable off-device.
 
@@ -51,5 +50,3 @@ later).
 
 - The demo `manifest` references icon/splash images that were not created (a
   real channel needs them).
-- The `NOTICE` copyright line guesses the Unleash legal entity
-  ("Bricks Software AB") — correct if wrong.

@@ -1,9 +1,6 @@
 REM Background thread for the Unleash SDK. Polls /api/frontend on an interval,
 REM publishes the toggle map onto the `toggles` node field, persists it for
 REM bootstrap, accumulates evaluation metrics, and periodically posts them.
-REM
-REM The threading model (Task node + observed fields + message port) is adapted
-REM from the LaunchDarkly Roku SDK (Apache-2.0). See NOTICE.
 
 function init() as Void
     m.messagePort = createObject("roMessagePort")

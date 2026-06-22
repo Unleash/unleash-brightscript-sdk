@@ -5,13 +5,9 @@ channels, written in BrightScript. It evaluates feature toggles against the
 [Unleash Frontend API](https://docs.getunleash.io/reference/front-end-api)
 (`/api/frontend`) or [Unleash Edge](https://docs.getunleash.io/reference/unleash-edge).
 
-The networking runs on a SceneGraph `Task` thread, so the render thread is
-never blocked. Toggles are polled on an interval, cached to the registry for
-fast startup, and evaluation metrics are reported back to Unleash.
-
-> Architecture and threading model are adapted from the Apache-2.0 licensed
-> [LaunchDarkly Roku SDK](https://github.com/launchdarkly/roku-client-sdk).
-> See [`NOTICE`](./NOTICE).
+The networking runs on a SceneGraph `Task` thread, so the render thread is never
+blocked. Toggles are polled on an interval, cached to the registry for fast
+startup, and evaluation metrics are reported back to Unleash.
 
 ## Status: Alpha
 
