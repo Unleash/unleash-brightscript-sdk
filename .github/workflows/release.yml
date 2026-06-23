@@ -81,7 +81,7 @@ jobs:
 
           npm version "$VERSION" --no-git-tag-version
           make build
-          git add package.json package-lock.json rawsrc/UnleashVersion.brs
+          git add package.json pnpm-lock.yaml rawsrc/UnleashVersion.brs
           git commit -m "chore: bump version to $VERSION"
           git tag -a "$TAG" -m "$TAG"
 
