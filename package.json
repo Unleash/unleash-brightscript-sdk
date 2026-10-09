@@ -10,7 +10,7 @@
     "lint": "bsc --project bsconfig.json"
   },
   "devDependencies": {
-    "@rokucommunity/brs": "^0.47.4",
+    "@rokucommunity/brs": "^0.47.6",
     "brighterscript": "^0.72.4",
     "unleash-proxy-client": "3.8.0"
   },
